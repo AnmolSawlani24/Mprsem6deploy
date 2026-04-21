@@ -49,9 +49,8 @@ services:
         sync: false
 
   # Frontend Static Site
-  - type: static
+  - type: static_site
     name: smart-tender-frontend
-    env: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishDir: dist
