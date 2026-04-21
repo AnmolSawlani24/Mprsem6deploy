@@ -112,5 +112,30 @@ This will validate:
 - Scenario B: similar bid totals should favor the bidder with better performance metrics
 - Scenario C: high social impact and delay should favor the lower-delay bid
 
+## Deployment (Production)
+
+This project is prepared for deployment on **Render** using a Blueprint (`render.yaml`).
+
+### Deployment Steps
+
+1. **GitHub**: Push your code to a GitHub repository.
+2. **Database**: Render doesn't host MySQL. Use a free provider like [Aiven](https://aiven.io/mysql) or [TiDB Cloud](https://www.pingcap.com/tidb-cloud/).
+3. **Render Blueprint**: 
+   - Sign in to [Render](https://render.com).
+   - Click **New +** > **Blueprint**.
+   - Connect your GitHub repo.
+   - Render will automatically detect the `render.yaml` and configure the 3 services:
+     - `smart-tender-frontend` (Static Site)
+     - `smart-tender-backend` (Node.js Service)
+     - `smart-tender-ai` (Docker Service)
+4. **Environment Variables**: In the Render dashboard, you will need to fill in the following keys:
+   - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` (or use `DATABASE_URL`)
+   - `GANACHE_URL` (Use a persistent RPC provider like Alchemy or Infura for testnets)
+   - `CONTRACT_ADDRESS` & `PRIVATE_KEY`
+   - `MISTRAL_API_KEY`
+
+### Notes on AI Engine
+The AI Engine is deployed as a Docker container to ensure system dependencies (`tesseract-ocr` and `poppler-utils`) are correctly installed for PDF extraction.
+
 ## License
 MIT

@@ -10,13 +10,8 @@ from pypdf import PdfReader
 from mistralai import Mistral
 from dotenv import load_dotenv
 
-# Load environment variables from backend/.env
-env_path = os.path.join(os.path.dirname(__file__), '..', 'backend', '.env')
-if os.path.exists(env_path):
-    load_dotenv(env_path)
-    print(f'[AI ENGINE] Loaded environment from {env_path}')
-else:
-    load_dotenv() # Fallback to local .env
+# Load environment variables
+load_dotenv()
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 mistral_client = Mistral(api_key=MISTRAL_API_KEY) if MISTRAL_API_KEY else None
@@ -24,31 +19,27 @@ mistral_client = Mistral(api_key=MISTRAL_API_KEY) if MISTRAL_API_KEY else None
 from pdf2image import convert_from_path
 import pytesseract
 
-# If Tesseract is installed but not available on PATH, set the executable path explicitly.
-TESSERACT_PATHS = [
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
-]
-for path in TESSERACT_PATHS:
-    if os.path.exists(path):
-        pytesseract.pytesseract.tesseract_cmd = path
-        break
+# In Linux/Docker, tesseract and poppler-utils are in the system PATH.
+# We only need explicit paths for local Windows development if not in PATH.
+TESSERACT_CMD = os.getenv("TESSERACT_CMD")
+if TESSERACT_CMD:
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
-# If Poppler is installed but not available on PATH, set the executable path explicitly.
 POPPLER_PATH = os.getenv('POPPLER_PATH')
-if not POPPLER_PATH:
-    POPPLER_PATHS = [
-        r"C:\Users\rushi\Downloads\poppler-25.12.0\Library\bin",
-        r"C:\Program Files\poppler-23.05.0\Library\bin",
-        r"C:\Program Files\poppler\Library\bin",
-        r"C:\Program Files\poppler\bin",
-        r"C:\Program Files (x86)\poppler\Library\bin",
-        r"C:\Program Files (x86)\poppler\bin"
-    ]
-    for path in POPPLER_PATHS:
-        if os.path.exists(path):
-            POPPLER_PATH = path
-            break
+# Windows fallbacks for local dev (kept as secondary)
+if os.name == 'nt':
+    if not pytesseract.pytesseract.tesseract_cmd:
+        T_PATHS = [r"C:\Program Files\Tesseract-OCR\tesseract.exe", r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"]
+        for p in T_PATHS:
+            if os.path.exists(p):
+                pytesseract.pytesseract.tesseract_cmd = p
+                break
+    if not POPPLER_PATH:
+        P_PATHS = [r"C:\Users\rushi\Downloads\poppler-25.12.0\Library\bin", r"C:\Program Files\poppler\Library\bin"]
+        for p in P_PATHS:
+            if os.path.exists(p):
+                POPPLER_PATH = p
+                break
 
 print(f'[AI ENGINE] Tesseract path = {pytesseract.pytesseract.tesseract_cmd}', flush=True)
 print(f'[AI ENGINE] Poppler path = {POPPLER_PATH}', flush=True)
@@ -382,4 +373,6 @@ def extract_tender():
 
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    # In production, use '0.0.0.0' to be accessible by Render
+    app.run(host='0.0.0.0', port=port, debug=False)

@@ -1,0 +1,64 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: smart-tender-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node index.js
+    rootDir: backend
+    envVars:
+      - key: NODE_VERSION
+        value: 18.0.0
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_ENGINE_URL
+        fromService:
+          name: smart-tender-ai
+          type: web
+          property: host
+      - key: GANACHE_URL
+        sync: false
+      - key: PRIVATE_KEY
+        sync: false
+      - key: CONTRACT_ADDRESS
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+
+  # AI Engine Web Service (Docker)
+  - type: web
+    name: smart-tender-ai
+    env: docker
+    plan: free
+    rootDir: ai_engine
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MISTRAL_API_KEY
+        sync: false
+
+  # Frontend Static Site
+  - type: static
+    name: smart-tender-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: smart-tender-backend
+          type: web
+          property: host
+        suffix: /api

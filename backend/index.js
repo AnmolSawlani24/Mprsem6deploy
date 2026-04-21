@@ -30,6 +30,6 @@ app.use('/api/evaluate', evaluateRoutes);
 app.use('/api/result', resultRoutes);
 app.use('/api/blockchain', blockchainRoutes);
 
-app.listen(port, () => {
-  console.log(`Backend server running on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Backend server running on port ${port}`);
 });
